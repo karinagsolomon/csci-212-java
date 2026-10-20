@@ -21,6 +21,8 @@ public class Driver {
     public void reset() {
         qualifyingTime = 0.0;
         totalTime = 0.0;
+        retirementRate = 0.0;
+        pitLap = 0;
         retired = false;
         pitted = false;
     }
@@ -39,7 +41,7 @@ public class Driver {
 
     // Complete this method.
     public void setQualifyingTime(double qualifyingTime) {
-        qualifyingTime = 0.0;
+        this.qualifyingTime = qualifyingTime;
     }
 
     public double getTotalTime() {
@@ -48,14 +50,14 @@ public class Driver {
 
     // Complete this method.
     public void setTotalTime(double totalTime) {
-
+        this.totalTime = totalTime;
     }
 
     /*
      * Add time to the driver's current total time.
      */
     public void addTime(double time) {
-
+        totalTime += time;
     }
 
     public double getRetirementRate() {
@@ -64,10 +66,7 @@ public class Driver {
 
     // Complete this method.
     public void setRetirementRate(double retirementRate) {
-        /* Each driver receives a random retirement rate within the range specified for the team.During each normal racing lap, determine whether the driver retires. Once a driver retires:
-        ● the driver should not complete any additional laps
-        ● the driver should no longer appear in the active race standings
-        */
+        this.retirementRate = retirementRate;
     }
 
     public int getPitLap() {
@@ -76,9 +75,7 @@ public class Driver {
 
     // Complete this method.
     public void setPitLap(int pitLap) {
-        // During each normal racing lap, an active driver receives a random lap time within the range specified for the driver's team. The lap time should be added to the driver's accumulated race time.
-        pitLap = random.nextInt();
-        pitLap + addTime();
+        this.pitLap = pitLap;
     }
 
     public boolean isRetired() {
@@ -89,7 +86,7 @@ public class Driver {
      * Mark this driver as retired.
      */
     public void retire() {
-        isRetired();
+        retired = true;
     }
 
     public boolean hasPitted() {
@@ -100,6 +97,6 @@ public class Driver {
      * Mark that this driver has completed a pit stop.
      */
     public void pit() {
-        hasPitted();
+        pitted = true;
     }
 }

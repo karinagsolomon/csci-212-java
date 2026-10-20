@@ -61,8 +61,7 @@ public class Team {
      * this team's minimum and maximum lap time.
      */
     public double generateLapTime(Random random) {
-        return random.nextInt(minLapTime, maxLapTime);
-        // return 0.0;
+        return minLapTime + random.nextDouble() * (maxLapTime - minLapTime);
     }
 
 
@@ -71,9 +70,7 @@ public class Team {
      * this team's minimum and maximum pit time.
      */
     public double generatePitTime(Random random) {
-        /* Every driver is assigned one random pit-stop lap between Lap 1 and Lap 55. The two drivers from the same team cannot pit on the same lap. When a driver reaches the assigned pit lap, generate a random pit-stop time using the team's pit-time range and add it to the driver's total race time. A driver who retires before reaching the scheduled pit lap does not need to complete the pit stop. */
-        return random.nextInt(minPitTime, maxPitTime);
-        // return 0.0;
+        return minPitTime + random.nextDouble() * (maxPitTime - minPitTime);
     }
 
 
@@ -82,7 +79,7 @@ public class Team {
      * this team's minimum and maximum values.
      */
     public double generateRetirementRate(Random random) {
-        return random.nextInt(minRetirementRate, maxRetirementRate);
-        // return 0.0;
+        return minRetirementRate
+            + random.nextDouble() * (maxRetirementRate - minRetirementRate);
     }
 }

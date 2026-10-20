@@ -7,6 +7,7 @@ public class Race {
     private ArrayList<Team> teams;
     private ArrayList<Driver> drivers;
     private Random random;
+    private SafetyCar safetyCar;
 
     public Race(ArrayList<Team> teams) {
         this.teams = teams;
@@ -34,7 +35,11 @@ public class Race {
         for (int lap = 1; lap <= TOTAL_LAPS; lap++) {
             System.out.println("\nLap " + lap);
 
-            runNormalLap(lap);
+            if (safetyCar != null && safetyCar.isActive()) {
+                runSafetyCarLap(lap);
+            } else {
+                runNormalLap(lap);
+            }
 
             printStandings();
         }
@@ -53,9 +58,23 @@ public class Race {
      *    the team's allowed range.
      */
     private void prepareRace() {
+        safetyCar = null;
+        for (Team team : teams) {
+            Driver driver1 = team.getDriver1();
+            Driver driver2 = team.getDriver2();
+            driver1.reset();
+            driver2.reset();
 
+            driver1.setPitLap(randomLap());
+            int secondPitLap;
+            do {
+                secondPitLap = randomLap();
+            } while (secondPitLap == driver1.getPitLap());
+            driver2.setPitLap(secondPitLap);
 
-
+            driver1.setRetirementRate(team.generateRetirementRate(random));
+            driver2.setRetirementRate(team.generateRetirementRate(random));
+        }
     }
 
     /*
@@ -71,9 +90,23 @@ public class Race {
      * ...
      */
     private void runQualifying() {
+        for (Driver driver : drivers) {
+            driver.setQualifyingTime(
+                driver.getTeam().generateLapTime(random)
+            );
+        }
 
-
-
+        sortByQualifyingTime(drivers);
+        for (int position = 0; position < drivers.size(); position++) {
+            drivers.get(position).setTotalTime(position * 0.5);
+            System.out.printf(
+                "%2d. %-12s %-12s %.3f seconds%n",
+                position + 1,
+                drivers.get(position).getName(),
+                drivers.get(position).getTeam().getName(),
+                drivers.get(position).getQualifyingTime()
+            );
+        }
     }
 
     /*
@@ -87,9 +120,75 @@ public class Race {
      * - pits if this is the driver's pit lap
      */
     private void runNormalLap(int lap) {
+        for (Driver driver : getActiveDrivers()) {
+            if (random.nextDouble() < driver.getRetirementRate()) {
+                driver.retire();
+                System.out.println(
+                    driver.getName() + " retired on Lap " + lap
+                );
 
-    	
+                if (safetyCar == null || !safetyCar.isActive()) {
+                    if (random.nextDouble() < 0.30) {
+                        safetyCar = new SafetyCar(randomInt(2, 6));
+                        System.out.println(
+                            "Safety Car deployed for "
+                            + safetyCar.getRemainingLaps() + " laps"
+                        );
+                    }
+                }
+                continue;
+            }
 
+            driver.addTime(driver.getTeam().generateLapTime(random));
+            if (!driver.hasPitted() && driver.getPitLap() == lap) {
+                double pitTime = driver.getTeam().generatePitTime(random);
+                driver.addTime(pitTime);
+                driver.pit();
+                System.out.printf(
+                    "%s pits: +%.3f seconds%n",
+                    driver.getName(),
+                    pitTime
+                );
+            }
+        }
+    }
+
+    private void runSafetyCarLap(int lap) {
+        System.out.println(
+            "Safety Car ("
+            + safetyCar.getRemainingLaps() + " laps remaining)"
+        );
+
+        for (Driver driver : getActiveDrivers()) {
+            driver.addTime(driver.getTeam().generateLapTime(random));
+            if (!driver.hasPitted() && driver.getPitLap() == lap) {
+                double pitTime = driver.getTeam().generatePitTime(random);
+                driver.addTime(pitTime);
+                driver.pit();
+                System.out.printf(
+                    "%s pits: +%.3f seconds%n",
+                    driver.getName(),
+                    pitTime
+                );
+            }
+        }
+
+        compressField();
+        safetyCar.completeLap();
+    }
+
+    private void compressField() {
+        ArrayList<Driver> active = getActiveDrivers();
+        sortByRaceTime(active);
+
+        if (active.isEmpty()) {
+            return;
+        }
+
+        double leaderTime = active.get(0).getTotalTime();
+        for (int position = 0; position < active.size(); position++) {
+            active.get(position).setTotalTime(leaderTime + position * 0.5);
+        }
     }
 
     /*
@@ -101,9 +200,25 @@ public class Race {
      * Other gaps are measured relative to the leader.
      */
     private void printStandings() {
+        ArrayList<Driver> active = getActiveDrivers();
+        sortByRaceTime(active);
 
+        if (active.isEmpty()) {
+            System.out.println("No active drivers.");
+            return;
+        }
 
-
+        double leaderTime = active.get(0).getTotalTime();
+        for (int position = 0; position < active.size(); position++) {
+            Driver driver = active.get(position);
+            System.out.printf(
+                "%2d. %-12s %-12s gap: %.3f%n",
+                position + 1,
+                driver.getName(),
+                driver.getTeam().getName(),
+                driver.getTotalTime() - leaderTime
+            );
+        }
     }
     
     // Print the final result
